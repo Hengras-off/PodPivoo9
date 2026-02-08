@@ -1,53 +1,74 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import { HashRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { WatchlistProvider } from './contexts/WatchlistContext';
+import { Navbar } from './components/Navbar';
+import { AuthModal } from './components/AuthModal';
+import { SearchModal } from './components/SearchModal';
+import { HomePage } from './pages/HomePage';
+import { BrowsePage } from './pages/BrowsePage';
+import { SearchPage } from './pages/SearchPage';
+import { MyListPage } from './pages/MyListPage';
+import { MovieDetailPage } from './pages/MovieDetailPage';
+import Lenis from '@studio-freight/lenis';
+import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+function App() {
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
 
   useEffect(() => {
-    helloWorldApi();
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smooth: true,
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
   }, []);
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+    <ThemeProvider>
+      <AuthProvider>
+        <WatchlistProvider>
+          <HashRouter>
+            <div className="App min-h-screen">
+              <Navbar 
+                onSearchClick={() => setSearchModalOpen(true)}
+                onAuthClick={() => setAuthModalOpen(true)}
+              />
+              
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/browse" element={<BrowsePage />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/my-list" element={<MyListPage />} />
+                <Route path="/detail/:mediaType/:id" element={<MovieDetailPage />} />
+              </Routes>
 
-function App() {
-  return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+              <AuthModal 
+                isOpen={authModalOpen} 
+                onClose={() => setAuthModalOpen(false)} 
+              />
+              <SearchModal 
+                isOpen={searchModalOpen} 
+                onClose={() => setSearchModalOpen(false)} 
+              />
+            </div>
+          </HashRouter>
+        </WatchlistProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
