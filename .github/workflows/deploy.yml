@@ -1,0 +1,42 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+          
+      - name: Install dependencies
+        run: |
+          cd frontend
+          yarn install --frozen-lockfile
+          
+      - name: Build application
+        env:
+          REACT_APP_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          REACT_APP_TMDB_BASE_URL: https://api.themoviedb.org/3
+          REACT_APP_TMDB_IMAGE_BASE_URL: https://image.tmdb.org/t/p
+        run: |
+          cd frontend
+          yarn build
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend/build
+          cname: # Опционально: ваш кастомный домен
