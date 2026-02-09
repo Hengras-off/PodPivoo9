@@ -119,12 +119,14 @@ export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onC
 
   // Источники с русской озвучкой
   const sources = [
-    // KODIK - главный источник с русской озвучкой
+    // KODIK - главный источник с русской озвучкой  
     {
       name: 'Kodik',
       getUrl: () => {
         if (kinopoiskId) {
-          return `//kodik.info/find-player?kinopoiskId=${kinopoiskId}&only_translations=&strict=false`;
+          // Добавляем type для фильтрации фильм/сериал
+          const contentType = mediaType === 'movie' ? 'movie' : 'serial';
+          return `//kodik.info/find-player?kinopoiskId=${kinopoiskId}&only_translations=&strict=true&type=${contentType}`;
         }
         return null;
       },
@@ -134,21 +136,21 @@ export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onC
       voiceovers: 'Профессиональная озвучка',
       requiresKpId: true
     },
-    // HDVB - хороший источник с озвучкой
+    // Collaps - популярный русский агрегатор
     {
-      name: 'HDVB',
+      name: 'Collaps',
       getUrl: () => {
         if (kinopoiskId) {
-          return `//vid1693014373.vb17120svetlaede.pw/embed/${kinopoiskId}`;
+          return `//api.delivembd.ws/embed/kp/${kinopoiskId}`;
         }
         if (imdbId) {
-          return `//vid1693014373.vb17120svetlaede.pw/embed/imdb/${imdbId}`;
+          return `//api.delivembd.ws/embed/imdb/${imdbId}`;
         }
         return null;
       },
       description: 'Множество озвучек',
       icon: '🎥',
-      quality: 'HD',
+      quality: 'HD/Full HD',
       voiceovers: 'Русская озвучка',
       requiresKpId: false
     },
