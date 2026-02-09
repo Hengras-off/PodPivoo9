@@ -273,11 +273,14 @@ export const RussianPlayer = ({ imdbId, tmdbId, kinopoiskId, title, year, mediaT
                 <Languages className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-brand-primary mb-1">
-                    Русская озвучка и субтитры
+                    Точный поиск по TMDB ID
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Все источники предоставляют контент с русской озвучкой.
-                    Если один источник не работает - попробуйте другой.
+                    Плееры используют TMDB ID для точного соответствия. 
+                    Если фильм все равно неправильный - попробуйте Kodik (поиск по названию).
+                  </p>
+                  <p className="text-xs text-brand-primary mt-2">
+                    🎬 Сейчас ищем: <span className="font-semibold">{title} ({year})</span>
                   </p>
                 </div>
               </div>
