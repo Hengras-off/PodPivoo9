@@ -237,12 +237,12 @@ export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onC
               <h2 className="text-2xl md:text-3xl font-bold">{title} ({year})</h2>
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">
-                  {source.icon} {source.name}
+                  {currentSource?.icon} {currentSource?.name}
                 </span>
                 <span className="text-brand-primary">•</span>
-                <span className="text-muted-foreground">{source.quality}</span>
+                <span className="text-muted-foreground">{currentSource?.quality}</span>
                 <span className="text-brand-primary">•</span>
-                <span className="text-green-400">{source.voiceovers}</span>
+                <span className="text-green-400">{currentSource?.voiceovers}</span>
               </div>
             </div>
             <button
@@ -254,8 +254,37 @@ export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onC
             </button>
           </div>
 
+          {/* Source Tabs */}
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground mb-3">
+              Выберите источник (Collaps - русская озвучка, VidSrc - если заблокирован):
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {availableSources.map((source, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setSelectedSource(index);
+                    setLoading(true);
+                  }}
+                  className={`px-4 py-2.5 rounded-lg font-semibold transition-all text-sm ${
+                    selectedSource === index
+                      ? 'bg-brand-primary text-white shadow-[0_0_20px_rgba(255,59,48,0.4)] scale-105'
+                      : 'bg-white/10 hover:bg-white/15 border border-white/20'
+                  }`}
+                  data-testid={`source-${index}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{source.icon}</span>
+                    <span>{source.name}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Player Container */}
-          <div className="relative bg-black rounded-xl overflow-hidden shadow-2xl" style={{ height: '70vh' }}>
+          <div className="relative bg-black rounded-xl overflow-hidden shadow-2xl" style={{ height: '65vh' }}>
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
                 <div className="text-center space-y-4">
