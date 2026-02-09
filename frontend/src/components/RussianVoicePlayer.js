@@ -1,97 +1,201 @@
-import React, { useState, useEffect } from 'react';
-import { X, Loader2, AlertCircle, Languages } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Loader2, AlertCircle, Languages, RefreshCw, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 /**
- * РУССКИЕ плееры с ОЗВУЧКОЙ
- * Проверенные рабочие источники с русской озвучкой
+ * РУССКИЕ плееры с ОЗВУЧКОЙ - KODIK + другие источники
+ * Приоритет: Kodik (по Kinopoisk ID) → Videocdn → другие
  */
 export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onClose }) => {
   const [selectedSource, setSelectedSource] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [kinopoiskId, setKinopoiskId] = useState(null);
+  const [searchingKp, setSearchingKp] = useState(true);
+  const [kodikUrl, setKodikUrl] = useState(null);
+  const [error, setError] = useState(null);
 
-  // ПРОВЕРЕННЫЕ русские плееры с ОЗВУЧКОЙ
+  // Поиск Kinopoisk ID через различные методы
+  const findKinopoiskId = useCallback(async () => {
+    setSearchingKp(true);
+    setError(null);
+    
+    try {
+      // Метод 1: Поиск через Kinopoisk Unofficial API по IMDB ID
+      if (imdbId) {
+        try {
+          const response = await axios.get(
+            `https://kinopoiskapiunofficial.tech/api/v2.2/films?imdbId=${imdbId}`,
+            {
+              headers: { 'X-API-KEY': '8c8e1a50-6322-4135-8875-5d40a5420d86' },
+              timeout: 5000
+            }
+          );
+          if (response.data?.items?.[0]?.kinopoiskId) {
+            const kpId = response.data.items[0].kinopoiskId.toString();
+            setKinopoiskId(kpId);
+            setSearchingKp(false);
+            return kpId;
+          }
+        } catch (e) {
+          console.log('KP API by IMDB failed:', e.message);
+        }
+      }
+
+      // Метод 2: Поиск по названию и году
+      try {
+        const searchTitle = title.replace(/[^\w\sа-яА-Я]/g, '').trim();
+        const response = await axios.get(
+          `https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword`,
+          {
+            params: { keyword: searchTitle, page: 1 },
+            headers: { 'X-API-KEY': '8c8e1a50-6322-4135-8875-5d40a5420d86' },
+            timeout: 5000
+          }
+        );
+        
+        if (response.data?.films?.length > 0) {
+          // Ищем по году
+          const match = response.data.films.find(
+            f => f.year === year || f.year === String(year)
+          ) || response.data.films[0];
+          
+          if (match?.filmId) {
+            const kpId = match.filmId.toString();
+            setKinopoiskId(kpId);
+            setSearchingKp(false);
+            return kpId;
+          }
+        }
+      } catch (e) {
+        console.log('KP API by title failed:', e.message);
+      }
+
+      setSearchingKp(false);
+      return null;
+    } catch (e) {
+      console.error('KP search error:', e);
+      setSearchingKp(false);
+      return null;
+    }
+  }, [imdbId, title, year]);
+
+  // При монтировании ищем Kinopoisk ID
+  useEffect(() => {
+    findKinopoiskId();
+  }, [findKinopoiskId]);
+
+  // Генерируем URL для Kodik когда есть kinopoiskId
+  useEffect(() => {
+    if (kinopoiskId) {
+      // Kodik embed URL формат
+      const kodikEmbedUrl = `//kodik.info/find-player?kinopoiskId=${kinopoiskId}&only_translations=&strict=false&autoplay=true`;
+      setKodikUrl(kodikEmbedUrl);
+    }
+  }, [kinopoiskId]);
+
+  // Источники с русской озвучкой
   const sources = [
+    // KODIK - главный источник с русской озвучкой
     {
-      name: 'VidSrc (RU)',
+      name: 'Kodik',
       getUrl: () => {
-        // VidSrc поддерживает русскую озвучку
-        if (tmdbId) {
-          return `https://vidsrc.me/embed/${mediaType}?tmdb=${tmdbId}&ds_lang=ru`;
+        if (kinopoiskId) {
+          return `//kodik.info/find-player?kinopoiskId=${kinopoiskId}&only_translations=&strict=false`;
         }
         return null;
       },
-      description: 'Русская озвучка и субтитры',
-      icon: '🇷🇺',
+      description: 'Официальные русские озвучки',
+      icon: '🎬',
       quality: 'HD/Full HD',
-      voiceovers: 'Автоматическая озвучка на русском'
+      voiceovers: 'Профессиональная озвучка',
+      requiresKpId: true
     },
+    // HDVB - хороший источник с озвучкой
     {
-      name: 'VidSrc.net (RU)',
+      name: 'HDVB',
       getUrl: () => {
-        if (tmdbId) {
-          return `https://vidsrc.net/embed/${mediaType}/${tmdbId}?lang=ru`;
+        if (kinopoiskId) {
+          return `//vid1693014373.vb17120svetlaede.pw/embed/${kinopoiskId}`;
+        }
+        if (imdbId) {
+          return `//vid1693014373.vb17120svetlaede.pw/embed/imdb/${imdbId}`;
         }
         return null;
       },
       description: 'Множество озвучек',
-      icon: '🎬',
-      quality: 'HD/Full HD',
-      voiceovers: 'Русская озвучка'
+      icon: '🎥',
+      quality: 'HD',
+      voiceovers: 'Русская озвучка',
+      requiresKpId: false
     },
+    // Videocdn
     {
-      name: 'Embed.su (RU)',
+      name: 'VideoCDN',
       getUrl: () => {
-        if (tmdbId) {
-          return `https://embed.su/embed/${mediaType}/${tmdbId}?lang=ru`;
+        if (kinopoiskId) {
+          return `//videocdn.tv/api/short?kinopoisk_id=${kinopoiskId}`;
+        }
+        if (imdbId) {
+          return `//videocdn.tv/api/short?imdb_id=${imdbId}`;
         }
         return null;
       },
       description: 'Стабильный источник',
       icon: '📺',
       quality: 'HD',
-      voiceovers: 'Русская озвучка'
+      voiceovers: 'Русская озвучка',
+      requiresKpId: false
     },
+    // Alloha
     {
-      name: '2Embed (RU)',
+      name: 'Alloha',
       getUrl: () => {
-        if (tmdbId) {
-          const type = mediaType === 'movie' ? 'embed' : 'embedtv';
-          return `https://www.2embed.cc/${type}/${tmdbId}?lang=ru`;
+        if (kinopoiskId) {
+          return `//apivb.alloha.tv/?kp=${kinopoiskId}`;
+        }
+        if (imdbId) {
+          return `//apivb.alloha.tv/?imdb=${imdbId}`;
         }
         return null;
       },
-      description: 'Надежный плеер',
-      icon: '🎥',
+      description: 'Альтернативный плеер',
+      icon: '🌐',
       quality: 'HD',
-      voiceovers: 'Русские субтитры и озвучка'
+      voiceovers: 'Русская озвучка',
+      requiresKpId: false
     },
+    // VidSrc с русским языком
     {
-      name: 'VidSrc.xyz (RU)',
-      getUrl: () => {
-        if (tmdbId) {
-          return `https://vidsrc.xyz/embed/${mediaType}?tmdb=${tmdbId}&lang=ru`;
-        }
-        return null;
-      },
-      description: 'Быстрая загрузка',
-      icon: '⚡',
-      quality: 'HD',
-      voiceovers: 'Русская озвучка'
-    },
-    {
-      name: 'MultiEmbed (RU)',
+      name: 'VidSrc.pro',
       getUrl: () => {
         if (tmdbId) {
           const type = mediaType === 'movie' ? 'movie' : 'tv';
-          return `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&${type}=1&lang=ru`;
+          return `https://vidsrc.pro/embed/${type}/${tmdbId}`;
         }
         return null;
       },
-      description: 'Множество серверов с озвучкой',
-      icon: '🌐',
+      description: 'Международный с субтитрами',
+      icon: '🌍',
+      quality: 'HD/Full HD',
+      voiceovers: 'Субтитры на русском',
+      requiresKpId: false
+    },
+    // 2Embed
+    {
+      name: '2Embed',
+      getUrl: () => {
+        if (tmdbId) {
+          const type = mediaType === 'movie' ? 'movie' : 'tv';
+          return `https://www.2embed.cc/embed/${type}/${tmdbId}`;
+        }
+        return null;
+      },
+      description: 'Надежный источник',
+      icon: '⚡',
       quality: 'HD',
-      voiceovers: 'Автоматический выбор озвучки'
+      voiceovers: 'Субтитры',
+      requiresKpId: false
     }
   ];
 
