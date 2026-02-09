@@ -133,7 +133,7 @@ export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onC
       getUrl: () => {
         if (tmdbId) {
           const type = mediaType === 'movie' ? 'movie' : 'tv';
-          return `https://vidsrc.cc/v2/embed/${type}/${tmdbId}`;
+          return `https://vidsrc.xyz/embed/${type}/${tmdbId}`;
         }
         return null;
       },
