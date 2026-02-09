@@ -28,6 +28,14 @@ export const MovieDetailPage = () => {
           ? await getMovieDetails(id)
           : await getTVDetails(id);
         setDetails(data);
+        
+        // Пытаемся получить Kinopoisk ID
+        if (data.external_ids?.imdb_id) {
+          const kpId = await fetchKinopoiskIdFromIMDB(data.external_ids.imdb_id);
+          if (kpId) {
+            setKinopoiskId(kpId);
+          }
+        }
       } catch (err) {
         console.error('Error fetching details:', err);
         setError('Не удалось загрузить информацию');
