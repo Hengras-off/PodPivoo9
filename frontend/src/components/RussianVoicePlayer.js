@@ -129,24 +129,8 @@ export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onC
 
   const embedUrl = source.getUrl();
 
-  // Фильтруем доступные источники
-  const availableSources = sources.filter(source => {
-    try {
-      // Если источник требует KP ID и его нет - пропускаем пока идет поиск
-      if (source.requiresKpId && !kinopoiskId && searchingKp) {
-        return true; // Показываем, но с загрузкой
-      }
-      if (source.requiresKpId && !kinopoiskId && !searchingKp) {
-        return false; // KP ID не найден - скрываем
-      }
-      return source.getUrl() !== null;
-    } catch {
-      return false;
-    }
-  });
-
-  // Если все еще ищем KP ID - показываем загрузку
-  if (searchingKp) {
+  // Если все еще ищем KP ID и нет IMDB ID - показываем загрузку
+  if (searchingKp && !imdbId) {
     return (
       <AnimatePresence>
         <motion.div
@@ -172,7 +156,7 @@ export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onC
     );
   }
 
-  if (availableSources.length === 0) {
+  if (!embedUrl) {
     return (
       <AnimatePresence>
         <motion.div
@@ -184,7 +168,7 @@ export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onC
         >
           <div className="bg-card border border-border rounded-lg p-8 max-w-md text-center space-y-4">
             <AlertCircle className="w-16 h-16 mx-auto text-yellow-500" />
-            <h3 className="text-xl font-bold">Нет доступных плееров</h3>
+            <h3 className="text-xl font-bold">Плеер недоступен</h3>
             <p className="text-muted-foreground">
               Для этого фильма не найдены источники с русской озвучкой
             </p>
