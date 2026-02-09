@@ -255,11 +255,12 @@ export const MovieDetailPage = () => {
         </motion.div>
       )}
 
-      {/* Multi-Source Player Modal */}
+      {/* Russian Player Modal */}
       {showPlayer && (
-        <MultiSourcePlayer
+        <RussianPlayer
           imdbId={details.external_ids?.imdb_id}
           tmdbId={id}
+          kinopoiskId={kinopoiskId}
           title={details.title || details.name}
           year={new Date(details.release_date || details.first_air_date).getFullYear()}
           mediaType={mediaType}
