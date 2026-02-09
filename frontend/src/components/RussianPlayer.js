@@ -193,6 +193,10 @@ export const RussianPlayer = ({ imdbId, tmdbId, kinopoiskId, title, year, mediaT
   const currentSource = availableSources[selectedSource];
   const embedUrl = currentSource.getUrl();
 
+  // Отладка URL
+  console.log('Current player:', currentSource.name);
+  console.log('Embed URL:', embedUrl);
+
   return (
     <AnimatePresence>
       <motion.div
