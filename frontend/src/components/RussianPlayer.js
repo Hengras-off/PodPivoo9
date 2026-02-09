@@ -11,6 +11,15 @@ export const RussianPlayer = ({ imdbId, tmdbId, kinopoiskId, title, year, mediaT
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  // Отладка - выводим ID в консоль
+  console.log('RussianPlayer IDs:', {
+    imdbId,
+    tmdbId,
+    kinopoiskId,
+    mediaType,
+    title
+  });
+
   // Список русских источников
   const sources = [
     {
