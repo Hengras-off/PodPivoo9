@@ -4,16 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
 /**
- * РУССКИЕ плееры с ОЗВУЧКОЙ - KODIK + другие источники
- * Приоритет: Kodik (по Kinopoisk ID) → Videocdn → другие
+ * Collaps плеер с русской озвучкой
  */
 export const RussianVoicePlayer = ({ tmdbId, imdbId, title, year, mediaType, onClose }) => {
-  const [selectedSource, setSelectedSource] = useState(0);
   const [loading, setLoading] = useState(true);
   const [kinopoiskId, setKinopoiskId] = useState(null);
   const [searchingKp, setSearchingKp] = useState(true);
-  const [kodikUrl, setKodikUrl] = useState(null);
-  const [error, setError] = useState(null);
 
   // Логируем входные данные для отладки
   useEffect(() => {
